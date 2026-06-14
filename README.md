@@ -1,21 +1,21 @@
-# KAUST Academy 2026 - Computer Vision (YASREF)
+# KAUST Academy 2026 - Natural Language Processing (YASREF)
 
 ![Banner](assets/img/banner.png)
 
-Welcome to the **KAUST Academy 2026 YASREF Computer Vision Program**. This repository contains all materials and labs for the Computer Vision course — covering everything from CNN fundamentals to Vision Transformers.
+Welcome to the **KAUST Academy 2026 YASREF Natural Language Processing Program**. This repository contains all materials and labs for the NLP course — covering everything from text processing fundamentals to Transformers.
 
 ## Course Materials
 
 Access the course content through the website:
 
 <p align="center">
-  <a href="https://kaust-academy.github.io/2026_YASERF_computer_vision/">
+  <a href="https://kaust-academy.github.io/2026_YASERF_natural_language_processing/">
     <img src="assets/img/website.png" alt="Course Website" width="600">
   </a>
 </p>
 
 <h3 align="center">
-  <a href="https://kaust-academy.github.io/2026_YASERF_computer_vision/">
+  <a href="https://kaust-academy.github.io/2026_YASERF_natural_language_processing/">
     🔗 Access Content Website
   </a>
 </h3>
@@ -26,22 +26,22 @@ Access the course content through the website:
 
 ```
 ├── Slides/
-│   ├── Day 1/   # CNN slides
-│   ├── Day 2/   # Augmentation & Transfer Learning slides
-│   ├── Day 3/   # Segmentation slides
-│   ├── Day 4/   # Object Detection slides
-│   └── Day 5/   # Vision Transformers slides
+│   ├── Day 1/   # Introduction to NLP & Text Processing slides
+│   ├── Day 2/   # Word Embeddings & Text Representations slides
+│   ├── Day 3/   # Recurrent Neural Networks & Sequence Models slides
+│   ├── Day 4/   # Attention Mechanism slides
+│   └── Day 5/   # Transformers slides
 ├── Labs/
-│   ├── Day 1/   # PyTorch Basics, CNNs
-│   ├── Day 2/   # Datasets, Transfer Learning
-│   ├── Day 3/   # Segmentation notebooks
-│   ├── Day 4/   # Object Detection notebooks
-│   └── Day 5/   # Vision Transformer notebooks
+│   ├── Day 1/   # PyTorch Basics, NLP Basics
+│   ├── Day 2/   # Word Embeddings notebooks
+│   ├── Day 3/   # RNN & LSTM notebooks
+│   ├── Day 4/   # Attention Mechanism notebooks
+│   └── Day 5/   # Transformer notebooks
 └── Summaries/   # Day-by-day concept summaries
 ```
 
 ## License
 
-Licensed under [GPL-3.0](https://github.com/KAUST-Academy/2026_YASERF_computer_vision?tab=GPL-3.0-1-ov-file#readme).
+Licensed under [GPL-3.0](https://github.com/KAUST-Academy/2026_YASERF_natural_language_processing?tab=GPL-3.0-1-ov-file#readme).
 
 > ⚠️ **Important:** Recording and uploading lectures online is not permitted.
