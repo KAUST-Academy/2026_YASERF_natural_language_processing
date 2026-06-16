@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How doesnt_match works — Word Vector Averaging</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0e14;
+    --surface: #161922;
+    --surface2: #1e2130;
+    --border: rgba(255,255,255,.06);
+    --border2: rgba(255,255,255,.1);
+    --text: #e4e2dc;
+    --text2: #9b9990;
+    --text3: #6b6a63;
+    --blue: #6dacf0;
+    --blue-bg: rgba(109,172,240,.08);
+    --blue-glow: rgba(109,172,240,.15);
+    --red: #f07272;
+    --red-bg: rgba(240,114,114,.08);
+    --red-glow: rgba(240,114,114,.2);
+    --green: #5ec47a;
+    --green-bg: rgba(94,196,122,.08);
+    --green-glow: rgba(94,196,122,.15);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px 60px;
+  }
+
+  .page { max-width: 820px; width: 100%; }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .header .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+  .header h1 code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    background: var(--surface2);
+    padding: 2px 12px;
+    border-radius: 6px;
+    color: var(--blue);
+  }
+  .header p {
+    font-size: 15px;
+    color: var(--text2);
+    line-height: 1.6;
+    max-width: 540px;
+    margin: 0 auto;
+  }
+
+  .groups {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .groups button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .groups button:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
+  .groups button.on {
+    background: var(--blue-bg);
+    border-color: rgba(109,172,240,.3);
+    color: var(--blue);
+  }
+
+  .stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+  .step-item { display: flex; align-items: center; cursor: pointer; }
+  .step-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    border: 2px solid var(--border2);
+    color: var(--text3);
+    background: transparent;
+    transition: all .3s;
+    flex-shrink: 0;
+  }
+  .step-dot.done { border-color: rgba(109,172,240,.3); color: var(--blue); background: var(--blue-bg); }
+  .step-dot.act  { border-color: var(--blue); color: #fff; background: var(--blue); }
+  .step-label {
+    font-size: 13px;
+    color: var(--text3);
+    margin-left: 8px;
+    white-space: nowrap;
+    transition: all .3s;
+  }
+  .step-label.act { color: var(--text); font-weight: 500; }
+  .step-line {
+    width: 32px; height: 2px;
+    background: var(--border2);
+    margin: 0 6px;
+    border-radius: 1px;
+    transition: background .3s;
+  }
+  .step-line.done { background: rgba(109,172,240,.35); }
+
+  .canvas-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .canvas-card svg { display: block; }
+
+  .insight-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    min-height: 64px;
+  }
+  .insight-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .insight-icon.s0 { background: var(--blue-bg); }
+  .insight-icon.s1 { background: var(--green-bg); }
+  .insight-icon.s2 { background: rgba(239,159,39,.08); }
+  .insight-icon.s3 { background: var(--red-bg); }
+  .insight-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text2);
+  }
+  .insight-text strong { color: var(--text); font-weight: 600; }
+  .insight-text code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 2px 8px;
+    background: var(--surface2);
+    border-radius: 5px;
+    color: var(--blue);
+  }
+
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .nav-btn {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 500;
+    padding: 10px 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .nav-btn:hover { background: var(--surface2); border-color: rgba(255,255,255,.15); }
+  .nav-btn:disabled { opacity: .25; cursor: default; pointer-events: none; }
+  .nav-btn.primary {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #0c0e14;
+  }
+  .nav-btn.primary:hover { opacity: .9; }
+  .nav-btn svg { width: 16px; height: 16px; }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text3);
+  }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+
+  @media (max-width: 640px) {
+    .step-label { display: none; }
+    .header h1 { font-size: 24px; }
+    .header h1 code { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="header">
+    <div class="eyebrow">Word embeddings</div>
+    <h1>How <code>doesnt_match</code> finds the odd word</h1>
+    <p>When you average word vectors, the center lands near the cluster. The word farthest from that center is the one that doesn't belong.</p>
+  </div>
+
+  <div class="groups" id="groups"></div>
+  <div class="stepper" id="stepper"></div>
+  <div class="canvas-card"><svg id="cv" width="100%" viewBox="0 0 820 420"></svg></div>
+  <div class="insight-card" id="insight"></div>
+
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn" onclick="go(-1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back
+    </button>
+    <button class="nav-btn primary" id="nextBtn" onclick="go(1)">
+      Next
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#6dacf0"></div> Similar words</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#5ec47a"></div> Average center</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f07272"></div> Outlier</div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  { label:'pump, compressor, motor, evacuated', words:['pump','compressor','motor','evacuated'],
+    pos:[[210,215],[310,155],[185,140],[600,330]], outlier:3 },
+  { label:'vibration, overheating, corrosion, alarm', words:['vibration','overheating','corrosion','alarm'],
+    pos:[[200,210],[280,250],[300,165],[595,320]], outlier:3 },
+  { label:'hydrocracker, hydrotreater, tank, leak', words:['hydrocracker','hydrotreater','tank','leak'],
+    pos:[[215,175],[310,215],[195,255],[600,330]], outlier:3 }
+];
+
+const STEP_NAMES = ['Words in space', 'Average vectors', 'Measure distance', 'Outlier found'];
+
+const INSIGHTS = [
+  { icon:'s0', emoji:'&#9679;', text:'Each word lives at a point in <strong>embedding space</strong>. Words with similar meanings end up <strong>close together</strong>. Notice three words form a tight cluster while one sits far away.' },
+  { icon:'s1', emoji:'&#10753;', text:'We <strong>average all four vectors</strong> to find the center of the group. Since 3 out of 4 words are clustered, the center lands near them — like mixing 3 red paints + 1 blue gives mostly red.' },
+  { icon:'s2', emoji:'&#9473;', text:'Now we draw a line from each word to the center and measure the <strong>distance</strong>. Three words are close to the center. One is <strong>noticeably farther</strong> away.' },
+  { icon:'s3', emoji:'&#10008;', text:'The word with the <strong>longest distance</strong> to the center is the <strong>odd one out</strong>. This is exactly what <code>doesnt_match</code> computes — average, measure, pick the farthest.' }
+];
+
+let gi = 0, si = 0;
+
+function avg(ps) {
+  return [
+    ps.reduce((s,p) => s+p[0], 0) / ps.length,
+    ps.reduce((s,p) => s+p[1], 0) / ps.length
+  ];
+}
+function dist(a, b) {
+  return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2);
+}
+
+function buildGroups() {
+  const el = document.getElementById('groups');
+  el.innerHTML = '';
+  DATA.forEach((g, i) => {
+    const b = document.createElement('button');
+    b.className = i === gi ? 'on' : '';
+    b.textContent = g.label;
+    b.onclick = () => { gi = i; si = 0; render(); };
+    el.appendChild(b);
+  });
+}
+
+function buildStepper() {
+  const el = document.getElementById('stepper');
+  el.innerHTML = '';
+  STEP_NAMES.forEach((name, i) => {
+    if (i > 0) {
+      const ln = document.createElement('div');
+      ln.className = 'step-line' + (i <= si ? ' done' : '');
+      el.appendChild(ln);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'step-item';
+    wrap.onclick = () => { si = i; render(); };
+
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i < si ? ' done' : i === si ? ' act' : '');
+    dot.textContent = i + 1;
+
+    const lbl = document.createElement('span');
+    lbl.className = 'step-label' + (i === si ? ' act' : '');
+    lbl.textContent = name;
+
+    wrap.appendChild(dot);
+    wrap.appendChild(lbl);
+    el.appendChild(wrap);
+  });
+}
+
+function buildInsight() {
+  const ins = INSIGHTS[si];
+  document.getElementById('insight').innerHTML =
+    `<div class="insight-icon ${ins.icon}">${ins.emoji}</div>` +
+    `<div class="insight-text">${ins.text}</div>`;
+}
+
+function render() {
+  buildGroups();
+  buildStepper();
+  buildInsight();
+  document.getElementById('prevBtn').disabled = si === 0;
+  document.getElementById('nextBtn').disabled = si === 3;
+
+  const g = DATA[gi];
+  const ctr = avg(g.pos);
+  const ds = g.pos.map(p => dist(p, ctr));
+  let s = '';
+
+  // Grid
+  for (let x = 60; x <= 780; x += 80)
+    s += `<line x1="${x}" y1="0" x2="${x}" y2="420" stroke="rgba(255,255,255,.025)" stroke-width="0.5"/>`;
+  for (let y = 30; y <= 400; y += 80)
+    s += `<line x1="0" y1="${y}" x2="820" y2="${y}" stroke="rgba(255,255,255,.025)" stroke-width="0.5"/>`;
+
+  // Cluster ring (step 0)
+  if (si === 0) {
+    const cx = (g.pos[0][0] + g.pos[1][0] + g.pos[2][0]) / 3;
+    const cy = (g.pos[0][1] + g.pos[1][1] + g.pos[2][1]) / 3;
+    s += `<circle cx="${cx}" cy="${cy}" r="95" fill="none" stroke="rgba(109,172,240,.12)" stroke-width="1.5" stroke-dasharray="6 6"/>`;
+    s += `<text x="${cx}" y="${cy + 112}" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="rgba(255,255,255,.25)" font-weight="400">similar words cluster together</text>`;
+  }
+
+  // Center glow + dot (step 1+)
+  if (si >= 1) {
+    s += `<circle cx="${ctr[0]}" cy="${ctr[1]}" r="65" fill="rgba(94,196,122,.04)" stroke="none"/>`;
+    s += `<circle cx="${ctr[0]}" cy="${ctr[1]}" r="35" fill="rgba(94,196,122,.06)" stroke="none"/>`;
+  }
+
+  // Distance lines (step 2+)
+  if (si >= 2) {
+    g.pos.forEach((p, i) => {
+      const isO = si === 3 && i === g.outlier;
+      const col = isO ? 'rgba(240,114,114,.4)' : 'rgba(255,255,255,.06)';
+      const w = isO ? 2.5 : 1;
+      const dash = isO ? '' : '5 5';
+      s += `<line x1="${p[0]}" y1="${p[1]}" x2="${ctr[0]}" y2="${ctr[1]}" stroke="${col}" stroke-width="${w}" stroke-dasharray="${dash}" stroke-linecap="round"/>`;
+    });
+
+    // Distance pills
+    g.pos.forEach((p, i) => {
+      const isO = si === 3 && i === g.outlier;
+      const d = Math.round(ds[i]);
+      const mx = (p[0] + ctr[0]) / 2;
+      const my = (p[1] + ctr[1]) / 2;
+      const dx = p[0] - ctr[0], dy = p[1] - ctr[1];
+      const len = Math.sqrt(dx*dx + dy*dy) || 1;
+      const ox = -dy/len * 14, oy = dx/len * 14;
+      const px = mx + ox, py = my + oy;
+      const bg = isO ? 'rgba(240,114,114,.12)' : 'rgba(255,255,255,.04)';
+      const fc = isO ? '#f07272' : 'rgba(255,255,255,.35)';
+      const fw = isO ? 600 : 400;
+      s += `<rect x="${px-22}" y="${py-12}" width="44" height="22" rx="11" fill="${bg}"/>`;
+      s += `<text x="${px}" y="${py+1}" text-anchor="middle" dominant-baseline="central" font-family="JetBrains Mono,monospace" font-size="11" fill="${fc}" font-weight="${fw}">${d}</text>`;
+    });
+  }
+
+  // Center marker (step 1+)
+  if (si >= 1) {
+    s += `<circle cx="${ctr[0]}" cy="${ctr[1]}" r="7" fill="#5ec47a"/>`;
+    s += `<line x1="${ctr[0]-5}" y1="${ctr[1]}" x2="${ctr[0]+5}" y2="${ctr[1]}" stroke="#0c0e14" stroke-width="2" stroke-linecap="round"/>`;
+    s += `<line x1="${ctr[0]}" y1="${ctr[1]-5}" x2="${ctr[0]}" y2="${ctr[1]+5}" stroke="#0c0e14" stroke-width="2" stroke-linecap="round"/>`;
+    s += `<text x="${ctr[0]}" y="${ctr[1]+24}" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="#5ec47a" font-weight="500">average</text>`;
+  }
+
+  // Word dots
+  g.pos.forEach((p, i) => {
+    const isO = si === 3 && i === g.outlier;
+    const col = isO ? '#f07272' : '#6dacf0';
+    const glow = isO ? 'rgba(240,114,114,.08)' : 'rgba(109,172,240,.06)';
+    const r = isO ? 9 : 7;
+
+    s += `<circle cx="${p[0]}" cy="${p[1]}" r="${r + 18}" fill="${glow}"/>`;
+    if (isO) s += `<circle cx="${p[0]}" cy="${p[1]}" r="${r + 10}" fill="rgba(240,114,114,.06)"/>`;
+    s += `<circle cx="${p[0]}" cy="${p[1]}" r="${r}" fill="${col}"/>`;
+
+    const right = p[0] > 450;
+    const tx = right ? p[0] - 22 : p[0] + 22;
+    const anc = right ? 'end' : 'start';
+    s += `<text x="${tx}" y="${p[1]+1}" text-anchor="${anc}" dominant-baseline="central" font-family="Inter,sans-serif" font-size="15" fill="${col}" font-weight="600">${g.words[i]}</text>`;
+
+    if (isO) {
+      s += `<text x="${tx}" y="${p[1]+20}" text-anchor="${anc}" dominant-baseline="central" font-family="Inter,sans-serif" font-size="12" fill="rgba(240,114,114,.7)" font-weight="400">farthest from center</text>`;
+    }
+  });
+
+  document.getElementById('cv').innerHTML = s;
+}
+
+function go(d) {
+  si = Math.max(0, Math.min(3, si + d));
+  render();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' && si < 3) go(1);
+  if (e.key === 'ArrowLeft' && si > 0) go(-1);
+});
+
+render();
+</script>
+</body>
+</html>
